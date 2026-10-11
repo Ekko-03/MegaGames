@@ -7,6 +7,7 @@ import Contacto from './pages/Contacto';
 import Login from './pages/Login';
 import Catalogo from './pages/Catalogo';
 import Preventas from './pages/Preventas';
+import Admin from './pages/Admin';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/contacto" element={<Contacto />} />
         <Route path="/login" element={<Login />} />
         <Route path="/preventas" element={<Preventas />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/:plataforma" element={<Catalogo />} />
       </Routes>
       <Footer />

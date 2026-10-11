@@ -27,7 +27,7 @@ export default function Home() {
           <div className="row row-cols-1 row-cols-md-3 g-4">
             <div className="col">
               <div className="card h-100 text-bg-dark border-secondary shadow">
-                <img src="/img/98.webp" className="card-img-top" alt="Zelda" />
+                <img src="/img/tloz_totk.jpeg" className="card-img-top" alt="Zelda" />
                 <div className="card-body d-flex flex-column">
                   <h5 className="card-title fw-bold text-center">Juegos de Nintendo</h5>
                   <p className="card-text text-center">Explora el vasto mundo de aventuras épicas.</p>
