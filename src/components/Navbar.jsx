@@ -38,7 +38,7 @@ export default function Navbar() {
           <ul className="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center">
             <li className="nav-item">
               <Link className="nav-link fw-semibold" to="/preventas">
-                Preventas <span className="badge bg-danger ms-1" style={{ fontSize: '0.65rem' }}>HOT</span>
+                Preventas
               </Link>
             </li>
             <li className="nav-item dropdown">
