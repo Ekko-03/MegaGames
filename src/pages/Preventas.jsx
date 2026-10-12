@@ -28,6 +28,31 @@ export default function Preventas() {
       });
   }, []);
 
+
+  const handleAgregarAlCarrito = async (juegoId, titulo) => {
+    const raw = localStorage.getItem('megagames_user');
+    if (!raw) {
+      alert('Debes iniciar sesión para añadir productos a tu carrito.');
+      return;
+    }
+    const user = JSON.parse(raw);
+    
+    try {
+      const res = await fetch('/api/carrito', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario_id: user.id, juego_id: juegoId, cantidad: 1 })
+      });
+      if (res.ok) {
+        alert(`¡"${titulo}" añadido al carrito!`);
+      } else {
+        alert('Hubo un error al agregar el juego.');
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <main className="container-fluid px-4 px-lg-5 my-5">
       <div className="text-center mb-5">
@@ -100,42 +125,61 @@ export default function Preventas() {
                         Cupos: {juego.stock}
                       </span>
                     </div>
-                    <div className="d-flex gap-2">
-                      <button
-                        className="btn btn-outline-light flex-grow-1 fw-bold btn-sm py-2"
-                        onClick={async () => {
-                          const raw = localStorage.getItem('megagames_user');
-                          const user = raw ? JSON.parse(raw) : null;
-                          if (!user) {
-                            alert('Inicia sesión para añadir reservas a tu carrito');
-                            return;
-                          }
-                          await fetch('/api/carrito', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ usuario_id: user.id, juego_id: juego.id, cantidad: 1 })
-                          });
-                          alert(`¡"${juego.titulo}" añadido a tus reservas!`);
-                        }}
-                      >
-                        🛒 Al Carrito
-                      </button>
-                      <button
-                        className="btn btn-warning flex-grow-1 fw-bold text-dark btn-sm py-2 text-uppercase"
-                        onClick={async () => {
-                          const raw = localStorage.getItem('megagames_user');
-                          const user = raw ? JSON.parse(raw) : null;
-                          await fetch('/api/comprar', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ usuario_id: user ? user.id : null, juego_id: juego.id, cantidad: 1 })
-                          });
-                          alert(`¡Reserva confirmada para "${juego.titulo}"!`);
-                        }}
-                      >
-                        Reservar
-                      </button>
-                    </div>
+
+                    <div className="d-flex gap-2 mb-2">
+                    <button
+                      className="btn btn-outline-light flex-grow-1 fw-bold btn-sm"
+                      onClick={async () => {
+                        const raw = localStorage.getItem('megagames_user');
+                        const user = raw ? JSON.parse(raw) : null;
+                        if (!user) {
+                          alert('Inicia sesión para añadir productos a tu carrito');
+                          return;
+                        }
+                        
+                        const userId = user.id || user.id_usuario;
+
+                        const res = await fetch('/api/carrito', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ usuario_id: userId, juego_id: juego.id, cantidad: 1 })
+                        });
+
+                        const data = await res.json();
+
+                        if (res.ok) {
+                          alert(`¡"${juego.titulo}" añadido al carrito!`);
+                        } else {
+                          alert(`Error al guardar: ${data.error || 'No se pudo agregar'}`);
+                        }
+                      }}
+                    >
+                      🛒 Carrito
+                    </button>
+
+                    <button
+                      className="btn btn-success flex-grow-1 fw-bold btn-sm"
+                      onClick={async () => {
+                        const raw = localStorage.getItem('megagames_user');
+                        const user = raw ? JSON.parse(raw) : null;
+                        if (!user) {
+                          alert('Inicia sesión para realizar la compra');
+                          return;
+                        }
+                        
+                        const userId = user.id || user.id_usuario;
+
+                        await fetch('/api/comprar', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ usuario_id: userId, juego_id: juego.id, cantidad: 1 })
+                        });
+                        alert(`¡Compra de "${juego.titulo}" completada con éxito!`);
+                      }}
+                    >
+                      {juego.es_preventa === 1 ? 'Reservar' : 'Comprar'}
+                    </button>
+                  </div>
                   </div>
                 </div>
               </div>

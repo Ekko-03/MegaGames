@@ -394,6 +394,120 @@ app.post('/api/comprar', (req, res) => {
 });
 
 // ==========================================
+// CARRITO Y COMPRAS
+// ==========================================
+
+// Agregar o incrementar producto en el carrito
+app.post('/api/carrito', (req, res) => {
+  try {
+    const { usuario_id, juego_id, cantidad = 1 } = req.body;
+    if (!usuario_id || !juego_id) {
+      return res.status(400).json({ error: 'Falta usuario_id o juego_id' });
+    }
+
+    const uid = Number(usuario_id);
+    const jid = Number(juego_id);
+
+    const existe = db.prepare('SELECT id, cantidad FROM carritos WHERE usuario_id = ? AND juego_id = ?').get(uid, jid);
+
+    if (existe) {
+      db.prepare('UPDATE carritos SET cantidad = cantidad + ? WHERE id = ?').run(Number(cantidad), existe.id);
+    } else {
+      db.prepare('INSERT INTO carritos (usuario_id, juego_id, cantidad) VALUES (?, ?, ?)').run(uid, jid, Number(cantidad));
+    }
+
+    res.json({ success: true, mensaje: 'Producto guardado en el carrito' });
+  } catch (error) {
+    console.error("Error en POST /api/carrito:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Obtener carrito de un usuario
+app.get('/api/carrito/:usuario_id', (req, res) => {
+  try {
+    const uid = Number(req.params.usuario_id);
+    const carrito = db.prepare(`
+      SELECT c.id as carrito_id, c.cantidad, c.agregado_en,
+             j.id as juego_id, j.titulo, j.precio, j.imagen, j.plataforma
+      FROM carritos c
+      JOIN juegos j ON c.juego_id = j.id
+      WHERE c.usuario_id = ?
+    `).all(uid);
+
+    res.json(carrito);
+  } catch (error) {
+    console.error("Error en GET /api/carrito:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Eliminar un producto del carrito
+app.delete('/api/carrito/:carrito_id', (req, res) => {
+  try {
+    db.prepare('DELETE FROM carritos WHERE id = ?').run(req.params.carrito_id);
+    res.json({ success: true, mensaje: 'Producto eliminado del carrito' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Comprar todo el carrito
+app.post('/api/comprar-carrito', (req, res) => {
+  try {
+    const { usuario_id } = req.body;
+    const uid = Number(usuario_id);
+
+    const items = db.prepare('SELECT juego_id, cantidad FROM carritos WHERE usuario_id = ?').all(uid);
+    if (items.length === 0) {
+      return res.status(400).json({ error: 'El carrito está vacío' });
+    }
+
+    const insertVenta = db.prepare('INSERT INTO ventas (usuario_id, juego_id, cantidad, precio_unitario, total) VALUES (?, ?, ?, ?, ?)');
+    const getPrecio = db.prepare('SELECT precio FROM juegos WHERE id = ?');
+
+    db.transaction(() => {
+      for (const item of items) {
+        const juego = getPrecio.get(item.juego_id);
+        if (juego) {
+          const total = juego.precio * item.cantidad;
+          insertVenta.run(uid, item.juego_id, item.cantidad, juego.precio, total);
+        }
+      }
+      db.prepare('DELETE FROM carritos WHERE usuario_id = ?').run(uid);
+    })();
+
+    res.json({ success: true, mensaje: '¡Compra exitosa! Revisa "Mis Compras"' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Compra directa (1 solo producto)
+app.post('/api/comprar', (req, res) => {
+  try {
+    const { usuario_id, juego_id, cantidad = 1 } = req.body;
+    const jid = Number(juego_id);
+    const uid = usuario_id ? Number(usuario_id) : null;
+
+    const juego = db.prepare('SELECT id, precio, stock FROM juegos WHERE id = ?').get(jid);
+    if (!juego) return res.status(404).json({ error: 'Juego no encontrado' });
+
+    const total = juego.precio * Number(cantidad);
+    db.prepare('INSERT INTO ventas (usuario_id, juego_id, cantidad, precio_unitario, total) VALUES (?, ?, ?, ?, ?)').run(uid, jid, Number(cantidad), juego.precio, total);
+
+    if (uid) {
+      db.prepare('DELETE FROM carritos WHERE usuario_id = ? AND juego_id = ?').run(uid, jid);
+    }
+
+    res.json({ success: true, mensaje: 'Compra procesada exitosamente' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// ==========================================
 // PESTAÑA USUARIO CLIENTE (PERFIL, COMPRAS, DESEOS, SOLICITUDES)
 // ==========================================
 

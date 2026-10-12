@@ -56,8 +56,14 @@ export default function Navbar() {
             </li>
           </ul>
 
-          <div className="d-flex align-items-center gap-2">
+
+          <div className="d-flex align-items-center gap-3">
             {usuario ? (
+              <>
+                <Link to="/carrito" className="btn btn-light border-dark text-dark btn-sm fw-bold d-flex align-items-center gap-1">
+                  <span className="fs-5"></span>🛒 Mi Carrito
+                </Link>
+
               <div className="dropdown">
                 <button
                   className="btn btn-outline-dark btn-sm dropdown-toggle fw-bold"
@@ -92,6 +98,7 @@ export default function Navbar() {
                   </li>
                 </ul>
               </div>
+            </> 
             ) : (
               <div className="d-flex gap-2">
                 <Link to="/login" className="btn btn-outline-dark btn-sm fw-semibold">

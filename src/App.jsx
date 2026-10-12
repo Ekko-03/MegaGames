@@ -9,6 +9,7 @@ import Catalogo from './pages/Catalogo';
 import Preventas from './pages/Preventas';
 import Admin from './pages/Admin';
 import MiCuenta from './pages/MiCuenta';
+import Carrito from './pages/Carrito';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/preventas" element={<Preventas />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/cuenta" element={<MiCuenta />} />
+        <Route path="/carrito" element={<Carrito />} />
         <Route path="/:plataforma" element={<Catalogo />} />
       </Routes>
       <Footer />
