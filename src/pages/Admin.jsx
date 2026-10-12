@@ -6,6 +6,7 @@ export default function Admin() {
   const [metricas, setMetricas] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
   const [juegos, setJuegos] = useState([]);
+  const [solicitudes, setSolicitudes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
 
@@ -28,15 +29,17 @@ export default function Admin() {
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      const [resMetricas, resUsuarios, resJuegos] = await Promise.all([
+      const [resMetricas, resUsuarios, resJuegos, resSolicitudes] = await Promise.all([
         fetch('/api/admin/metricas').then(r => r.json()),
         fetch('/api/admin/usuarios').then(r => r.json()),
-        fetch('/api/juegos').then(r => r.json())
+        fetch('/api/juegos').then(r => r.json()),
+        fetch('/api/admin/solicitudes').then(r => r.json())
       ]);
 
       setMetricas(resMetricas);
       setUsuarios(resUsuarios);
       setJuegos(resJuegos);
+      setSolicitudes(resSolicitudes);
     } catch (err) {
       console.error(err);
       setMensaje({ texto: 'Error al conectar con el servidor', tipo: 'danger' });
@@ -418,7 +421,7 @@ export default function Admin() {
       </div>
 
       {/* Tabla de Gestión de Catálogo Existente */}
-      <div className="card shadow text-bg-dark border-secondary mb-4">
+      <div className="card shadow text-bg-dark border-secondary mb-5">
         <div className="card-header py-3 px-4 border-secondary fw-bold d-flex justify-content-between align-items-center">
           <span>🎮 Gestión de Juegos en Catálogo ({juegos.length})</span>
         </div>
@@ -483,6 +486,84 @@ export default function Admin() {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Tabla de Gestión de Solicitudes y Mensajes de Contacto */}
+      <div className="card shadow text-bg-dark border-secondary mb-4">
+        <div className="card-header py-3 px-4 border-secondary fw-bold d-flex justify-content-between align-items-center">
+          <span>📩 Gestión de Solicitudes y Contacto ({solicitudes.length})</span>
+        </div>
+        <div className="card-body p-0 table-responsive" style={{ maxHeight: '450px' }}>
+          {solicitudes.length === 0 ? (
+            <div className="text-center py-4 text-secondary">
+              No hay solicitudes ni mensajes registrados.
+            </div>
+          ) : (
+            <table className="table table-dark table-hover mb-0 align-middle">
+              <thead>
+                <tr className="border-secondary text-secondary small text-uppercase">
+                  <th className="px-3">Fecha</th>
+                  <th>Origen</th>
+                  <th>Usuario / Remitente</th>
+                  <th>Tipo / Asunto</th>
+                  <th>Detalle</th>
+                  <th>Estado</th>
+                  <th className="text-end px-3">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {solicitudes.map((s, idx) => (
+                  <tr key={`${s.origen}-${s.id}-${idx}`} className="border-secondary">
+                    <td className="px-3 text-secondary small">{new Date(s.creado_en).toLocaleDateString()}</td>
+                    <td>
+                      <span className={`badge ${s.origen === 'Contacto Web' ? 'bg-info text-dark' : 'bg-primary'}`}>
+                        {s.origen}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="fw-semibold">{s.usuario_nombre || 'Anónimo'}</div>
+                      <small className="text-secondary">{s.usuario_email}</small>
+                    </td>
+                    <td>
+                      <span className="badge bg-secondary mb-1 d-block" style={{ width: 'fit-content' }}>{s.tipo}</span>
+                      <small className="fw-semibold">{s.asunto}</small>
+                    </td>
+                    <td style={{ maxWidth: '300px' }} className="small text-light text-opacity-75">
+                      {s.detalle}
+                    </td>
+                    <td>
+                      <span className={`badge ${s.estado === 'Resuelto' ? 'bg-success' : s.estado === 'En Revisión' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
+                        {s.estado}
+                      </span>
+                    </td>
+                    <td className="text-end px-3">
+                      {s.origen === 'Interna' && (
+                        <select
+                          className="form-select form-select-sm bg-dark text-light border-secondary"
+                          style={{ width: '130px', display: 'inline-block' }}
+                          value={s.estado}
+                          onChange={async (e) => {
+                            const nuevoEstado = e.target.value;
+                            await fetch(`/api/admin/solicitudes/${s.id}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ estado: nuevoEstado })
+                            });
+                            cargarDatos();
+                          }}
+                        >
+                          <option value="Pendiente">Pendiente</option>
+                          <option value="En Revisión">En Revisión</option>
+                          <option value="Resuelto">Resuelto</option>
+                        </select>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </main>

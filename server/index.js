@@ -320,6 +320,37 @@ app.get('/api/admin/metricas', (req, res) => {
   }
 });
 
+// Listar todas las solicitudes para el administrador
+app.get('/api/admin/solicitudes', (req, res) => {
+  try {
+    const solicitudes = db.prepare(`
+      SELECT s.id, 'Interna' as origen, s.tipo, s.asunto, s.detalle, s.estado, s.creado_en,
+             u.nombre_completo as usuario_nombre, u.email as usuario_email
+      FROM solicitudes s
+      LEFT JOIN usuarios u ON s.usuario_id = u.id
+      UNION ALL
+      SELECT m.id, 'Contacto Web' as origen, 'Mensaje' as tipo, 'Contacto General' as asunto, m.mensaje as detalle, 'Recibido' as estado, m.creado_en,
+             m.nombre as usuario_nombre, m.email as usuario_email
+      FROM mensajes_contacto m
+      ORDER BY creado_en DESC
+    `).all();
+    res.json(solicitudes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Cambiar estado de una solicitud (Admin)
+app.put('/api/admin/solicitudes/:id', (req, res) => {
+  try {
+    const { estado } = req.body;
+    db.prepare('UPDATE solicitudes SET estado = ? WHERE id = ?').run(estado, req.params.id);
+    res.json({ success: true, mensaje: 'Estado de solicitud actualizado' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Acción de simular compra o añadir al carrito
 app.post('/api/carrito', (req, res) => {
   try {
@@ -363,17 +394,194 @@ app.post('/api/comprar', (req, res) => {
 });
 
 // ==========================================
-// CONTACTO
+// PESTAÑA USUARIO CLIENTE (PERFIL, COMPRAS, DESEOS, SOLICITUDES)
 // ==========================================
 
+// Obtener perfil completo y actualizado
+app.get('/api/usuario/perfil/:id', (req, res) => {
+  try {
+    const usuario = db.prepare(`
+      SELECT u.id, u.nombre_completo, u.email, u.telefono, u.rol, u.region_id, u.comuna_id,
+             r.nombre as region, c.nombre as comuna, u.creado_en
+      FROM usuarios u
+      LEFT JOIN regiones r ON u.region_id = r.id
+      LEFT JOIN comunas c ON u.comuna_id = c.id
+      WHERE u.id = ?
+    `).get(req.params.id);
+
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+    res.json(usuario);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Actualizar datos personales
+app.put('/api/usuario/perfil/:id', (req, res) => {
+  try {
+    const { nombre_completo, telefono, region_id, comuna_id, password } = req.body;
+    if (!nombre_completo) return res.status(400).json({ error: 'Nombre es requerido' });
+
+    if (password && password.trim().length >= 6) {
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync(password, salt);
+      db.prepare(`
+        UPDATE usuarios SET
+          nombre_completo = ?,
+          telefono = ?,
+          region_id = ?,
+          comuna_id = ?,
+          password_hash = ?
+        WHERE id = ?
+      `).run(nombre_completo.trim(), telefono || null, region_id ? Number(region_id) : null, comuna_id ? Number(comuna_id) : null, hash, req.params.id);
+    } else {
+      db.prepare(`
+        UPDATE usuarios SET
+          nombre_completo = ?,
+          telefono = ?,
+          region_id = ?,
+          comuna_id = ?
+        WHERE id = ?
+      `).run(nombre_completo.trim(), telefono || null, region_id ? Number(region_id) : null, comuna_id ? Number(comuna_id) : null, req.params.id);
+    }
+
+    const actualizado = db.prepare(`
+      SELECT u.id, u.nombre_completo, u.email, u.telefono, u.rol, u.region_id, u.comuna_id,
+             r.nombre as region, c.nombre as comuna, u.creado_en
+      FROM usuarios u
+      LEFT JOIN regiones r ON u.region_id = r.id
+      LEFT JOIN comunas c ON u.comuna_id = c.id
+      WHERE u.id = ?
+    `).get(req.params.id);
+
+    res.json({ success: true, usuario: actualizado });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Mis compras
+app.get('/api/usuario/compras/:id', (req, res) => {
+  try {
+    const compras = db.prepare(`
+      SELECT v.id, v.cantidad, v.precio_unitario, v.total, v.creado_en,
+             j.titulo, j.imagen, j.plataforma
+      FROM ventas v
+      JOIN juegos j ON v.juego_id = j.id
+      WHERE v.usuario_id = ?
+      ORDER BY v.id DESC
+    `).all(req.params.id);
+    res.json(compras);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Lista de deseos - obtener
+app.get('/api/usuario/deseos/:id', (req, res) => {
+  try {
+    const deseos = db.prepare(`
+      SELECT d.id as deseo_id, d.agregado_en,
+             j.id as juego_id, j.titulo, j.imagen, j.plataforma, j.precio, j.stock, j.es_preventa
+      FROM deseos d
+      JOIN juegos j ON d.juego_id = j.id
+      WHERE d.usuario_id = ?
+      ORDER BY d.id DESC
+    `).all(req.params.id);
+    res.json(deseos);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Lista de deseos - agregar
+app.post('/api/usuario/deseos', (req, res) => {
+  try {
+    const { usuario_id, juego_id } = req.body;
+    if (!usuario_id || !juego_id) return res.status(400).json({ error: 'usuario_id y juego_id requeridos' });
+
+    db.prepare('INSERT OR IGNORE INTO deseos (usuario_id, juego_id) VALUES (?, ?)').run(usuario_id, juego_id);
+    res.json({ success: true, mensaje: 'Juego agregado a tu lista de deseos' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Lista de deseos - eliminar
+app.delete('/api/usuario/deseos/:deseoId', (req, res) => {
+  try {
+    db.prepare('DELETE FROM deseos WHERE id = ?').run(req.params.deseoId);
+    res.json({ success: true, mensaje: 'Juego eliminado de tu lista de deseos' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Mis solicitudes - obtener (incluyendo las ingresadas por formulario de contacto)
+app.get('/api/usuario/solicitudes/:id', (req, res) => {
+  try {
+    const usuario = db.prepare('SELECT email FROM usuarios WHERE id = ?').get(req.params.id);
+    const emailUsuario = usuario ? usuario.email : '';
+
+    const solicitudes = db.prepare(`
+      SELECT id, 'Solicitud Interna' as origen, tipo, asunto, detalle, estado, creado_en
+      FROM solicitudes
+      WHERE usuario_id = ?
+      UNION ALL
+      SELECT id, 'Formulario de Contacto' as origen, 'Mensaje Web' as tipo, 'Contacto General' as asunto, mensaje as detalle, 'Recibido' as estado, creado_en
+      FROM mensajes_contacto
+      WHERE LOWER(email) = LOWER(?)
+      ORDER BY creado_en DESC
+    `).all(req.params.id, emailUsuario);
+
+    res.json(solicitudes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Mis solicitudes - crear nueva
+app.post('/api/usuario/solicitudes', (req, res) => {
+  try {
+    const { usuario_id, tipo, asunto, detalle } = req.body;
+    if (!usuario_id || !asunto || !detalle) {
+      return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    }
+
+    const result = db.prepare(`
+      INSERT INTO solicitudes (usuario_id, tipo, asunto, detalle, estado)
+      VALUES (?, ?, ?, ?, 'En Revisión')
+    `).run(usuario_id, tipo || 'Soporte', asunto.trim(), detalle.trim());
+
+    const nueva = db.prepare('SELECT * FROM solicitudes WHERE id = ?').get(result.lastInsertRowid);
+    res.status(201).json({ success: true, solicitud: nueva });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==========================================
+// CONTACTO
+// ==========================================
 app.post('/api/contacto', (req, res) => {
   try {
     const { nombre, email, mensaje } = req.body;
     if (!nombre || !email || !mensaje) {
       return res.status(400).json({ error: 'Todos los campos son requeridos' });
     }
+
     const stmt = db.prepare('INSERT INTO mensajes_contacto (nombre, email, mensaje) VALUES (?, ?, ?)');
     const result = stmt.run(nombre.trim(), email.trim(), mensaje.trim());
+
+    // Si el correo coincide con un usuario registrado, vincular también a solicitudes
+    const usuario = db.prepare('SELECT id FROM usuarios WHERE LOWER(email) = LOWER(?)').get(email.trim());
+    if (usuario) {
+      db.prepare(`
+        INSERT INTO solicitudes (usuario_id, tipo, asunto, detalle, estado)
+        VALUES (?, 'Formulario Web', 'Mensaje de Contacto', ?, 'Recibido')
+      `).run(usuario.id, mensaje.trim());
+    }
+
     res.status(201).json({ success: true, id: result.lastInsertRowid });
   } catch (error) {
     res.status(500).json({ error: error.message });

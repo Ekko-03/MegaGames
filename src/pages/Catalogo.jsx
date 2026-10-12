@@ -135,7 +135,7 @@ export default function Catalogo() {
                       </span>
                       <small className="text-muted">Stock: {juego.stock}</small>
                     </div>
-                    <div className="d-flex gap-2">
+                    <div className="d-flex gap-2 mb-2">
                       <button
                         className="btn btn-outline-light flex-grow-1 fw-bold btn-sm"
                         onClick={async () => {
@@ -171,6 +171,25 @@ export default function Catalogo() {
                         {juego.es_preventa === 1 ? 'Reservar' : 'Comprar'}
                       </button>
                     </div>
+                    <button
+                      className="btn btn-outline-danger w-100 btn-sm fw-bold"
+                      onClick={async () => {
+                        const raw = localStorage.getItem('megagames_user');
+                        const user = raw ? JSON.parse(raw) : null;
+                        if (!user) {
+                          alert('Inicia sesión para guardar en tu lista de deseos');
+                          return;
+                        }
+                        const res = await fetch('/api/usuario/deseos', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ usuario_id: user.id, juego_id: juego.id })
+                        });
+                        if (res.ok) alert(`¡"${juego.titulo}" guardado en tu lista de deseos!`);
+                      }}
+                    >
+                      ❤️ Agregar a Lista de Deseos
+                    </button>
                   </div>
                 </div>
               </div>

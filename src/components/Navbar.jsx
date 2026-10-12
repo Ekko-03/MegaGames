@@ -73,6 +73,11 @@ export default function Navbar() {
                       {usuario.rol === 'admin' ? 'Administrador' : 'Cliente'}
                     </span>
                   </li>
+                  <li>
+                    <Link className="dropdown-item fw-bold text-dark py-2" to="/cuenta">
+                      👤 Mi Cuenta
+                    </Link>
+                  </li>
                   {usuario.rol === 'admin' && (
                     <li>
                       <Link className="dropdown-item fw-bold text-dark py-2" to="/admin">
