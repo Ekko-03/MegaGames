@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: megagames
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: node server/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    disk:
+      name: megagames-data
+      mountPath: /opt/render/project/src/server/data
+      sizeGB: 1

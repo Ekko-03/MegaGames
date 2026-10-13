@@ -1,15 +1,27 @@
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import db, { initDatabase } from './db.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 initDatabase();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const isProd = process.env.NODE_ENV === 'production';
 
 app.use(cors());
 app.use(express.json());
+
+// Servir el frontend compilado en producción
+if (isProd) {
+  const distPath = path.join(__dirname, '..', 'dist');
+  app.use(express.static(distPath));
+}
 
 // Salud / Estadísticas generales
 app.get('/api/health', (req, res) => {
@@ -715,6 +727,13 @@ app.post('/api/contacto', (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Catch-all: devolver index.html para que React Router maneje las rutas
+if (isProd) {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`[Servidor] MegaGames API escuchando en http://localhost:${PORT}`);
