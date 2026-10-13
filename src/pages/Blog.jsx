@@ -11,7 +11,7 @@ export default function Blog() {
   return (
     <main className="container-fluid px-4 px-lg-5 my-5">
       <div className="mb-4 border-bottom border-secondary pb-2 d-flex justify-content-between align-items-end">
-        <h2 className="text-white fw-bold mb-0 text-uppercase">📰 MegaGames News</h2>
+        <h2 className="text-white fw-bold mb-0 text-uppercase">MegaGames News</h2>
         <span className="text-muted small">Tu diario gamer de confianza</span>
       </div>
 

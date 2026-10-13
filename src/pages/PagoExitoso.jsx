@@ -7,7 +7,7 @@ export default function PagoExitoso() {
   // Atrapamos los datos enviados desde el Carrito
   const datosCompra = location.state;
 
-  
+
   if (!datosCompra) {
     return (
       <main className="container my-5 text-center">
@@ -27,7 +27,7 @@ export default function PagoExitoso() {
     <main className="container my-5">
       <div className="row justify-content-center">
         <div className="col-lg-8">
-          
+
           {/* Encabezado de éxito */}
           <div className="card text-bg-dark border-success shadow-lg mb-4">
             <div className="card-body p-4 text-center">
@@ -73,7 +73,7 @@ export default function PagoExitoso() {
           {/* Resumen de Productos */}
           <div className="card text-bg-dark border-secondary shadow-sm mb-4">
             <div className="card-header border-secondary py-3 px-4 fw-bold">
-              📦 Detalle de productos adquiridos
+              Detalle de productos adquiridos
             </div>
             <div className="card-body p-0 table-responsive">
               <table className="table table-dark table-hover mb-0 align-middle">
@@ -107,7 +107,7 @@ export default function PagoExitoso() {
             </div>
           </div>
 
-          
+
           <div className="d-flex gap-3 justify-content-center">
             <Link to="/cuenta" className="btn btn-outline-light fw-bold px-4 py-2">Ver en Mis Compras</Link>
             <Link to="/" className="btn btn-success fw-bold px-4 py-2">Volver a la Tienda</Link>

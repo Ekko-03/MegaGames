@@ -4,7 +4,7 @@ Sitio web de comercio y catálogo de videojuegos desarrollado con **React**, **V
 
 ---
 
-## 🗄️ Base de Datos SQLite
+## Base de Datos SQLite
 
 La base de datos se almacena localmente en el archivo:
 ```
@@ -20,7 +20,7 @@ server/data/megagames.db
 
 ---
 
-## 🚀 Cómo ejecutar el proyecto
+## Cómo ejecutar el proyecto
 
 ### 1. Iniciar Frontend y Backend al mismo tiempo (Recomendado):
 ```bash
@@ -42,7 +42,7 @@ Este comando ejecuta concurrentemente:
 
 ---
 
-## 📡 Endpoints de la API REST
+## Endpoints de la API REST
 
 | Método | Endpoint | Descripción |
 | :--- | :--- | :--- |
@@ -59,7 +59,7 @@ Este comando ejecuta concurrentemente:
 
 ---
 
-## 👤 Usuario de Demostración Inicial (Seed)
+## Usuario de Demostración Inicial (Seed)
 
 La base de datos viene precargada con un usuario para pruebas inmediatas:
 - **Email:** `gamer@megagames.cl`

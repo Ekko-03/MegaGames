@@ -226,7 +226,7 @@ export default function Admin() {
         <div className="col-lg-5">
           <div className={`card shadow border-0 ${editandoId ? 'border-warning border-2' : ''}`} style={{ backgroundColor: '#e9ecef' }}>
             <div className="py-3 px-4 fw-bold border-bottom d-flex justify-content-between align-items-center" style={{ backgroundColor: editandoId ? '#ffe8b3' : '#cfd4da', color: '#212529' }}>
-              <span>{editandoId ? '✏️ Editar Videojuego' : '➕ Añadir Videojuego al Catálogo'}</span>
+              <span>{editandoId ? '✏️ Editar Videojuego' : 'Añadir Videojuego al Catálogo'}</span>
               {editandoId && (
                 <button
                   type="button"
@@ -382,7 +382,7 @@ export default function Admin() {
         <div className="col-lg-7">
           <div className="card shadow text-bg-dark border-secondary h-100">
             <div className="card-header py-3 px-4 border-secondary fw-bold d-flex justify-content-between align-items-center">
-              <span>👥 Usuarios Registrados ({usuarios.length})</span>
+              <span>Usuarios Registrados ({usuarios.length})</span>
             </div>
             <div className="card-body p-0 table-responsive" style={{ maxHeight: '480px' }}>
               <table className="table table-dark table-hover mb-0 align-middle">
@@ -423,7 +423,7 @@ export default function Admin() {
       {/* Tabla de Gestión de Catálogo Existente */}
       <div className="card shadow text-bg-dark border-secondary mb-5">
         <div className="card-header py-3 px-4 border-secondary fw-bold d-flex justify-content-between align-items-center">
-          <span>🎮 Gestión de Juegos en Catálogo ({juegos.length})</span>
+          <span>Gestión de Juegos en Catálogo ({juegos.length})</span>
         </div>
         <div className="card-body p-0 table-responsive" style={{ maxHeight: '400px' }}>
           <table className="table table-dark table-hover mb-0 align-middle">
@@ -492,7 +492,7 @@ export default function Admin() {
       {/* Tabla de Gestión de Solicitudes y Mensajes de Contacto */}
       <div className="card shadow text-bg-dark border-secondary mb-4">
         <div className="card-header py-3 px-4 border-secondary fw-bold d-flex justify-content-between align-items-center">
-          <span>📩 Gestión de Solicitudes y Contacto ({solicitudes.length})</span>
+          <span>Gestión de Solicitudes y Contacto ({solicitudes.length})</span>
         </div>
         <div className="card-body p-0 table-responsive" style={{ maxHeight: '450px' }}>
           {solicitudes.length === 0 ? (
