@@ -51,12 +51,21 @@ export default function Navbar() {
                 <li><Link className="dropdown-item" to="/xbox">Xbox Series X|S</Link></li>
               </ul>
             </li>
+            
+            <li className="nav-item">
+              <Link className="nav-link" to="/contacto">Contacto</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/nosotros">Nosotros</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/blog">Blog</Link>
+            </li>
             <li className="nav-item">
               <Link className="nav-link" to="/contacto">Contacto</Link>
             </li>
           </ul>
-
-
+          
           <div className="d-flex align-items-center gap-3">
             {usuario ? (
               <>

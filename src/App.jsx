@@ -10,12 +10,20 @@ import Preventas from './pages/Preventas';
 import Admin from './pages/Admin';
 import MiCuenta from './pages/MiCuenta';
 import Carrito from './pages/Carrito';
+import Nosotros from './pages/Nosotros';
+import Blog from './pages/Blog';
+import DetalleBlog from './pages/DetalleBlog';
+import PagoExitoso from './pages/PagoExitoso';
 
 function App() {
   return (
     <Router>
       <Navbar />
       <Routes>
+        <Route path="/pago-exitoso" element={<PagoExitoso />} />
+        <Route path="/nosotros" element={<Nosotros />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:id" element={<DetalleBlog />} />
         <Route path="/" element={<Home />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/contacto" element={<Contacto />} />
