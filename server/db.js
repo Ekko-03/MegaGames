@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { regionesYComunasChile } from './data/chileData.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +26,8 @@ export function initDatabase() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS regiones (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nombre TEXT NOT NULL UNIQUE
+      nombre TEXT NOT NULL UNIQUE,
+      orden INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS comunas (
@@ -126,40 +128,58 @@ export function initDatabase() {
     console.error("Error verificando columna rol:", err);
   }
 
+  // Asegurar que la columna 'orden' exista en 'regiones'
+  try {
+    const regInfo = db.prepare("PRAGMA table_info(regiones)").all();
+    const hasOrden = regInfo.some(col => col.name === 'orden');
+    if (!hasOrden) {
+      db.exec("ALTER TABLE regiones ADD COLUMN orden INTEGER DEFAULT 0");
+    }
+  } catch (err) {
+    console.error("Error verificando columna orden en regiones:", err);
+  }
+
   seedData();
 }
 
-function seedData() {
-  // 1. Regiones y Comunas
-  const countRegiones = db.prepare('SELECT COUNT(*) as count FROM regiones').get().count;
-  if (countRegiones === 0) {
-    const insertRegion = db.prepare('INSERT INTO regiones (nombre) VALUES (?)');
-    const insertComuna = db.prepare('INSERT INTO comunas (region_id, nombre) VALUES (?, ?)');
+function seedGeografia() {
+  const insertRegion = db.prepare('INSERT INTO regiones (nombre, orden) VALUES (?, ?)');
+  const updateRegion = db.prepare('UPDATE regiones SET orden = ? WHERE id = ?');
+  const insertComuna = db.prepare('INSERT INTO comunas (region_id, nombre) VALUES (?, ?)');
+  const selectComuna = db.prepare('SELECT id FROM comunas WHERE region_id = ? AND nombre = ?');
 
-    const datosGeograficos = [
-      {
-        nombre: 'Región Metropolitana de Santiago',
-        comunas: ['Santiago', 'Providencia', 'Las Condes', 'Ñuñoa', 'Maipú', 'La Florida', 'Puente Alto', 'San Miguel']
-      },
-      {
-        nombre: 'Valparaíso',
-        comunas: ['Valparaíso', 'Viña del Mar', 'Quilpué', 'Villa Alemana', 'Concón']
-      },
-      {
-        nombre: 'Biobío',
-        comunas: ['Concepción', 'Talcahuano', 'San Pedro de la Paz', 'Chiguayante', 'Los Ángeles']
+  db.transaction(() => {
+    for (const reg of regionesYComunasChile) {
+      // Buscar si ya existe la región por nombre o por alguno de sus alias
+      let existingRegion = null;
+      for (const alias of [reg.nombre, ...(reg.aliases || [])]) {
+        existingRegion = db.prepare('SELECT id, nombre FROM regiones WHERE nombre = ?').get(alias);
+        if (existingRegion) break;
       }
-    ];
 
-    db.transaction(() => {
-      for (const reg of datosGeograficos) {
-        const info = insertRegion.run(reg.nombre);
-        for (const com of reg.comunas) {
-          insertComuna.run(info.lastInsertRowid, com);
+      let regionId;
+      if (existingRegion) {
+        regionId = existingRegion.id;
+        updateRegion.run(reg.orden, regionId);
+      } else {
+        const info = insertRegion.run(reg.nombre, reg.orden);
+        regionId = info.lastInsertRowid;
+      }
+
+      // Insertar comunas faltantes para esta región
+      for (const com of reg.comunas) {
+        const existingComuna = selectComuna.get(regionId, com);
+        if (!existingComuna) {
+          insertComuna.run(regionId, com);
         }
       }
-    })();
-  }
+    }
+  })();
+}
+
+function seedData() {
+  // 1. Regiones y Comunas de Chile (16 regiones y 346 comunas)
+  seedGeografia();
 
   // 2. Juegos
   const countJuegos = db.prepare('SELECT COUNT(*) as count FROM juegos').get().count;

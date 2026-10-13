@@ -150,8 +150,22 @@ app.delete('/api/juegos/:id', (req, res) => {
 
 app.get('/api/regiones', (req, res) => {
   try {
-    const regiones = db.prepare('SELECT * FROM regiones ORDER BY id ASC').all();
+    const tableInfo = db.prepare("PRAGMA table_info(regiones)").all();
+    const hasOrden = tableInfo.some(col => col.name === 'orden');
+    const query = hasOrden
+      ? 'SELECT * FROM regiones ORDER BY orden ASC, id ASC'
+      : 'SELECT * FROM regiones ORDER BY id ASC';
+    const regiones = db.prepare(query).all();
     res.json(regiones);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/comunas', (req, res) => {
+  try {
+    const comunas = db.prepare('SELECT * FROM comunas ORDER BY region_id ASC, nombre ASC').all();
+    res.json(comunas);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

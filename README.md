@@ -14,8 +14,8 @@ server/data/megagames.db
 ### Tablas configuradas:
 1. **`usuarios`**: Almacena usuarios registrados con contraseñas encriptadas con `bcryptjs`, región, comuna y datos de contacto.
 2. **`juegos`**: Catálogo completo clasificado por plataformas (`nintendo`, `playstation`, `xbox`), precios en CLP, stock, imágenes y estado de preventa.
-3. **`regiones`**: Regiones geográficas de Chile.
-4. **`comunas`**: Comunas asociadas a cada región con llaves foráneas (`FOREIGN KEY`).
+3. **`regiones`**: Las 16 regiones geográficas oficiales de Chile (con columna `orden` de norte a sur).
+4. **`comunas`**: Las 346 comunas de Chile asociadas a cada región con llaves foráneas (`FOREIGN KEY`).
 5. **`mensajes_contacto`**: Mensajes y consultas enviados a través del formulario de contacto.
 
 ---
@@ -50,8 +50,9 @@ Este comando ejecuta concurrentemente:
 | `GET` | `/api/juegos` | Catálogo de juegos (soporta filtros `?plataforma=...`, `?preventa=1`, `?q=...`) |
 | `GET` | `/api/juegos/:id` | Obtener detalle de un videojuego específico |
 | `POST` | `/api/juegos` | Agregar un nuevo videojuego |
-| `GET` | `/api/regiones` | Listado de regiones |
-| `GET` | `/api/comunas/:regionId` | Listado de comunas por región |
+| `GET` | `/api/regiones` | Listado de las 16 regiones ordenadas de norte a sur |
+| `GET` | `/api/comunas` | Listado de todas las 346 comunas |
+| `GET` | `/api/comunas/:regionId` | Listado de comunas filtradas por región |
 | `POST` | `/api/auth/registro` | Registro de nuevo usuario (encriptado con bcrypt) |
 | `POST` | `/api/auth/login` | Autenticación de usuario |
 | `POST` | `/api/contacto` | Guardar mensaje de contacto en la base de datos |
