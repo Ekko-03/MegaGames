@@ -62,6 +62,13 @@ Este comando ejecuta concurrentemente:
 
 ## Usuario de Demostración Inicial (Seed)
 
-La base de datos viene precargada con un usuario para pruebas inmediatas:
+La base de datos viene precargada con dos usuarios para pruebas inmediatas:
+
+1. Usuario normal
 - **Email:** `gamer@megagames.cl`
 - **Contraseña:** `123456`
+
+2. Admin
+- **Email:** `admin@megagames.cl`
+- **Contraseña:** `123456`
+
